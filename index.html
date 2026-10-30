@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>إذاعة القرآن الكريم</title>
+  <meta name="description" content="إذاعة القرآن الكريم، بث مباشر">
+  <meta name="theme-color" content="#0b1a12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="إذاعة القرآن">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://stream.radiojar.com">
+  <link rel="dns-prefetch" href="https://stream.radiojar.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="dhikr-layer" aria-hidden="true"></div>
+
+  <main class="page">
+    <section class="card">
+      <div class="ornament">﴿ بِسْمِ ٱللَّـٰهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيـمِ ﴾</div>
+      <h1 class="title">إذاعة القرآن الكريم</h1>
+      <div class="subtitle">بث مباشر | Holy Quran Radio</div>
+
+      <button class="play-btn" id="playBtn" type="button" aria-label="تشغيل / إيقاف">
+        <svg id="btnIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+
+      <div class="status" id="statusTxt" role="status" aria-live="polite">اضغط للاستماع</div>
+
+      <div class="wave" id="wave" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="vol-row">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.5 12A4.5 4.5 0 0016 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
+        <input type="range" id="vol" min="0" max="100" value="80" step="1" aria-label="مستوى الصوت">
+        <span class="vol-val" id="volVal">80%</span>
+      </div>
+
+      <div class="data-usage">
+        <div class="data-usage-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4V10H4v10zm6 0h4V4h-4v16zm6 0h4v-7h-4v7z"/></svg>
+        </div>
+        <div class="data-usage-info">
+          <div class="data-usage-label">استهلاك النت اليوم (تقديري)</div>
+          <div class="data-usage-val" id="dataUsageVal">0.00 KB</div>
+          <div class="data-usage-date" id="dataUsageDate"></div>
+        </div>
+        <button class="data-usage-reset" id="dataUsageReset" type="button">تصفير</button>
+      </div>
+
+      <div class="install" id="installBox" hidden>
+        <button class="install-btn" id="installBtn" type="button" hidden>تثبيت التطبيق</button>
+        <p class="install-hint" id="iosHint" hidden>للتثبيت على الآيفون: اضغط زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>تمت البرمجة بواسطة</span>
+        <span class="footer-name">أحمد عماد</span>
+        <span class="footer-heart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>
+        <span>لوجه الله تعالى</span>
+      </div>
+      <span class="footer-sadaqa">بنيّة صدقة جارية، إن شاء الله</span>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
