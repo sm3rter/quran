@@ -1,6 +1,4 @@
-// مهم: غيّر رقم VERSION عند كل نشر لنسخة جديدة، فهذا ما يجعل المتصفحات تكتشف التحديث
-// ويظهر زر "تحديث الآن" للمستخدمين.
-var VERSION = "8177d7700c";
+var VERSION = "8a51a59767";
 var SHELL_CACHE = "quran-radio-shell-" + VERSION;
 var RUNTIME_CACHE = "quran-radio-runtime-" + VERSION;
 
@@ -25,7 +23,6 @@ function isStream(url) {
   });
 }
 
-// لا نستدعي skipWaiting هنا: النسخة الجديدة تنتظر حتى يضغط المستخدم "تحديث الآن"
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(SHELL_CACHE).then(function (cache) {
@@ -73,7 +70,6 @@ self.addEventListener("fetch", function (event) {
   if (isStream(url)) return;
   if (request.headers.has("range")) return;
 
-  // الملفات تُخدم من كاش النسخة الحالية فقط، فلا يحدث خلط بين نسخة قديمة وجديدة
   if (request.mode === "navigate") {
     event.respondWith(
       caches.open(SHELL_CACHE).then(function (cache) {

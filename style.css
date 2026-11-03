@@ -398,7 +398,6 @@ body::after {
 }
 
 
-/* ---------- install sheet ---------- */
 .sheet[hidden] { display: none; }
 
 .sheet {
@@ -541,7 +540,6 @@ html.gate-on, html.gate-on body { overflow: hidden; }
   to { opacity: 1; }
 }
 
-/* ---------- update bar ---------- */
 .update-bar[hidden] { display: none; }
 
 .update-bar {
