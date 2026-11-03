@@ -491,6 +491,151 @@
     var deferred = null;
     var isMobile = IS_IOS || IS_ANDROID;
 
+    // ---- لغة تعليمات التثبيت فقط (حسب لغة الجهاز) ----
+    var RTL = { ar: 1, ur: 1 };
+    var I18N = {
+      ar: {
+        title: "ثبّت التطبيق على جهازك",
+        lead: "استمع للإذاعة بسرعة من الشاشة الرئيسية مثل أي تطبيق عادي.",
+        installNow: "تثبيت الآن",
+        a1: "اضغط على قائمة المتصفح <b>⋮</b> في أعلى الشاشة",
+        a2: "اختر <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b>",
+        a3: "افتح التطبيق من الشاشة الرئيسية",
+        doneTitle: "تم تثبيت التطبيق",
+        done: "تم التثبيت بنجاح ✅<br>افتح التطبيق من أيقونته على الشاشة الرئيسية.",
+        iosWarn: "افتح هذا الرابط في متصفح Safari أولاً، ثم اتبع الخطوات التالية.",
+        i1a: "اضغط زر المشاركة",
+        i1b: "في شريط المتصفح (أو ⋯ ثم مشاركة)",
+        i2: "مرّر لأسفل واختر <b>إضافة إلى الشاشة الرئيسية</b>",
+        i3: "اضغط <b>إضافة</b> وسيظهر التطبيق على شاشتك"
+      },
+      en: {
+        title: "Install the app on your device",
+        lead: "Listen to the radio quickly from your home screen, like any regular app.",
+        installNow: "Install now",
+        a1: "Tap the browser menu <b>⋮</b> at the top of the screen",
+        a2: "Choose <b>Install app</b> or <b>Add to Home screen</b>",
+        a3: "Open the app from your home screen",
+        doneTitle: "App installed",
+        done: "Installed successfully ✅<br>Open the app from its icon on your home screen.",
+        iosWarn: "Open this link in Safari first, then follow the steps below.",
+        i1a: "Tap the Share button",
+        i1b: "in the browser bar (or ⋯ then Share)",
+        i2: "Scroll down and choose <b>Add to Home Screen</b>",
+        i3: "Tap <b>Add</b> and the app will appear on your screen"
+      },
+      fr: {
+        title: "Installez l’application sur votre appareil",
+        lead: "Écoutez la radio rapidement depuis l’écran d’accueil, comme une application classique.",
+        installNow: "Installer maintenant",
+        a1: "Appuyez sur le menu du navigateur <b>⋮</b> en haut de l’écran",
+        a2: "Choisissez <b>Installer l’application</b> ou <b>Ajouter à l’écran d’accueil</b>",
+        a3: "Ouvrez l’application depuis l’écran d’accueil",
+        doneTitle: "Application installée",
+        done: "Installation réussie ✅<br>Ouvrez l’application depuis son icône sur l’écran d’accueil.",
+        iosWarn: "Ouvrez d’abord ce lien dans Safari, puis suivez les étapes ci-dessous.",
+        i1a: "Appuyez sur le bouton Partager",
+        i1b: "dans la barre du navigateur (ou ⋯ puis Partager)",
+        i2: "Faites défiler et choisissez <b>Sur l’écran d’accueil</b>",
+        i3: "Appuyez sur <b>Ajouter</b> et l’application apparaîtra sur votre écran"
+      },
+      tr: {
+        title: "Uygulamayı cihazınıza yükleyin",
+        lead: "Radyoyu ana ekrandan, diğer uygulamalar gibi hızlıca dinleyin.",
+        installNow: "Şimdi yükle",
+        a1: "Ekranın üstündeki tarayıcı menüsüne <b>⋮</b> dokunun",
+        a2: "<b>Uygulamayı yükle</b> veya <b>Ana ekrana ekle</b> seçeneğini seçin",
+        a3: "Uygulamayı ana ekrandan açın",
+        doneTitle: "Uygulama yüklendi",
+        done: "Başarıyla yüklendi ✅<br>Uygulamayı ana ekrandaki simgesinden açın.",
+        iosWarn: "Önce bu bağlantıyı Safari’de açın, sonra aşağıdaki adımları izleyin.",
+        i1a: "Paylaş düğmesine dokunun",
+        i1b: "tarayıcı çubuğunda (veya ⋯ ardından Paylaş)",
+        i2: "Aşağı kaydırın ve <b>Ana Ekrana Ekle</b> seçeneğini seçin",
+        i3: "<b>Ekle</b>’ye dokunun, uygulama ekranınızda görünecek"
+      },
+      ur: {
+        title: "ایپ کو اپنے ڈیوائس پر انسٹال کریں",
+        lead: "ہوم اسکرین سے عام ایپ کی طرح تیزی سے ریڈیو سنیں۔",
+        installNow: "ابھی انسٹال کریں",
+        a1: "اسکرین کے اوپر براؤزر مینو <b>⋮</b> پر ٹیپ کریں",
+        a2: "<b>ایپ انسٹال کریں</b> یا <b>ہوم اسکرین میں شامل کریں</b> منتخب کریں",
+        a3: "ایپ کو ہوم اسکرین سے کھولیں",
+        doneTitle: "ایپ انسٹال ہو گئی",
+        done: "کامیابی سے انسٹال ہو گئی ✅<br>ایپ کو ہوم اسکرین پر اس کے آئیکن سے کھولیں۔",
+        iosWarn: "پہلے اس لنک کو Safari میں کھولیں، پھر درج ذیل مراحل پر عمل کریں۔",
+        i1a: "شیئر بٹن دبائیں",
+        i1b: "براؤزر بار میں (یا ⋯ پھر شیئر)",
+        i2: "نیچے سکرول کریں اور <b>ہوم اسکرین میں شامل کریں</b> منتخب کریں",
+        i3: "<b>شامل کریں</b> دبائیں، ایپ آپ کی اسکرین پر آ جائے گی"
+      },
+      id: {
+        title: "Instal aplikasi di perangkat Anda",
+        lead: "Dengarkan radio dengan cepat dari layar utama, seperti aplikasi biasa.",
+        installNow: "Instal sekarang",
+        a1: "Ketuk menu browser <b>⋮</b> di bagian atas layar",
+        a2: "Pilih <b>Instal aplikasi</b> atau <b>Tambahkan ke layar utama</b>",
+        a3: "Buka aplikasi dari layar utama",
+        doneTitle: "Aplikasi terinstal",
+        done: "Berhasil diinstal ✅<br>Buka aplikasi dari ikonnya di layar utama.",
+        iosWarn: "Buka tautan ini di Safari terlebih dahulu, lalu ikuti langkah berikut.",
+        i1a: "Ketuk tombol Bagikan",
+        i1b: "di bilah browser (atau ⋯ lalu Bagikan)",
+        i2: "Gulir ke bawah dan pilih <b>Tambah ke Layar Utama</b>",
+        i3: "Ketuk <b>Tambah</b> dan aplikasi akan muncul di layar Anda"
+      },
+      es: {
+        title: "Instala la aplicación en tu dispositivo",
+        lead: "Escucha la radio rápidamente desde la pantalla de inicio, como cualquier app.",
+        installNow: "Instalar ahora",
+        a1: "Toca el menú del navegador <b>⋮</b> en la parte superior",
+        a2: "Elige <b>Instalar aplicación</b> o <b>Añadir a la pantalla de inicio</b>",
+        a3: "Abre la aplicación desde la pantalla de inicio",
+        doneTitle: "Aplicación instalada",
+        done: "Instalada correctamente ✅<br>Abre la aplicación desde su icono en la pantalla de inicio.",
+        iosWarn: "Abre primero este enlace en Safari y luego sigue los pasos.",
+        i1a: "Toca el botón Compartir",
+        i1b: "en la barra del navegador (o ⋯ y luego Compartir)",
+        i2: "Desplázate hacia abajo y elige <b>Añadir a pantalla de inicio</b>",
+        i3: "Toca <b>Añadir</b> y la aplicación aparecerá en tu pantalla"
+      },
+      de: {
+        title: "App auf deinem Gerät installieren",
+        lead: "Höre das Radio schnell vom Startbildschirm aus, wie bei jeder anderen App.",
+        installNow: "Jetzt installieren",
+        a1: "Tippe oben auf das Browsermenü <b>⋮</b>",
+        a2: "Wähle <b>App installieren</b> oder <b>Zum Startbildschirm hinzufügen</b>",
+        a3: "Öffne die App vom Startbildschirm",
+        doneTitle: "App installiert",
+        done: "Erfolgreich installiert ✅<br>Öffne die App über ihr Symbol auf dem Startbildschirm.",
+        iosWarn: "Öffne diesen Link zuerst in Safari und folge dann den Schritten.",
+        i1a: "Tippe auf die Teilen-Schaltfläche",
+        i1b: "in der Browserleiste (oder ⋯ und dann Teilen)",
+        i2: "Scrolle nach unten und wähle <b>Zum Home-Bildschirm</b>",
+        i3: "Tippe auf <b>Hinzufügen</b> und die App erscheint auf deinem Bildschirm"
+      }
+    };
+
+    var deviceLang = "en";
+    (function () {
+      var list = navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || "en"];
+      for (var i = 0; i < list.length; i++) {
+        var code = String(list[i]).toLowerCase().split("-")[0];
+        if (I18N[code]) { deviceLang = code; return; }
+      }
+    })();
+    var T = I18N[deviceLang];
+
+    sheet.lang = deviceLang;
+    sheet.dir = RTL[deviceLang] ? "rtl" : "ltr";
+    Array.prototype.forEach.call(sheet.querySelectorAll("[data-i18n]"), function (el) {
+      var txt = T[el.getAttribute("data-i18n")];
+      if (txt) el.innerHTML = txt;
+    });
+
+
     // على الموبايل: شاشة التثبيت تغطي كل شيء، والإذاعة تظهر فقط داخل التطبيق المثبّت
     function openGate() {
       sheet.hidden = false;
@@ -502,7 +647,7 @@
       sheetIos.hidden = true;
       sheetAndroid.hidden = true;
       lead.hidden = true;
-      sheetTitle.textContent = "تم تثبيت التطبيق";
+      sheetTitle.textContent = T.doneTitle;
       sheetDone.hidden = false;
       box.hidden = true;
       if (isMobile) openGate();

@@ -86,45 +86,45 @@
     <div class="sheet-backdrop"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <img class="sheet-icon" src="icon-192.png" alt="" width="64" height="64">
-      <h2 class="sheet-title" id="sheetTitle">ثبّت التطبيق على جهازك</h2>
-      <p class="sheet-lead">استمع للإذاعة بسرعة من الشاشة الرئيسية مثل أي تطبيق عادي.</p>
+      <h2 class="sheet-title" id="sheetTitle" data-i18n="title">ثبّت التطبيق على جهازك</h2>
+      <p class="sheet-lead" data-i18n="lead">استمع للإذاعة بسرعة من الشاشة الرئيسية مثل أي تطبيق عادي.</p>
 
       <div id="sheetAndroid" hidden>
-        <button class="sheet-primary" id="sheetInstallBtn" type="button" hidden>تثبيت الآن</button>
+        <button class="sheet-primary" id="sheetInstallBtn" type="button" data-i18n="installNow" hidden>تثبيت الآن</button>
         <ol class="sheet-steps" id="androidManual">
           <li>
             <span class="sheet-num">1</span>
-            <span>اضغط على قائمة المتصفح <b>⋮</b> في أعلى الشاشة</span>
+            <span data-i18n="a1">اضغط على قائمة المتصفح <b>⋮</b> في أعلى الشاشة</span>
           </li>
           <li>
             <span class="sheet-num">2</span>
-            <span>اختر <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b></span>
+            <span data-i18n="a2">اختر <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b></span>
           </li>
           <li>
             <span class="sheet-num">3</span>
-            <span>افتح التطبيق من الشاشة الرئيسية</span>
+            <span data-i18n="a3">افتح التطبيق من الشاشة الرئيسية</span>
           </li>
         </ol>
       </div>
 
-      <p class="sheet-done" id="sheetDone" hidden>تم التثبيت بنجاح ✅<br>افتح التطبيق من أيقونته على الشاشة الرئيسية.</p>
+      <p class="sheet-done" id="sheetDone" data-i18n="done" hidden>تم التثبيت بنجاح ✅<br>افتح التطبيق من أيقونته على الشاشة الرئيسية.</p>
 
       <div id="sheetIos" hidden>
-        <p class="sheet-warn" id="iosBrowserWarn" hidden>افتح هذا الرابط في متصفح Safari أولاً، ثم اتبع الخطوات التالية.</p>
+        <p class="sheet-warn" id="iosBrowserWarn" data-i18n="iosWarn" hidden>افتح هذا الرابط في متصفح Safari أولاً، ثم اتبع الخطوات التالية.</p>
         <ol class="sheet-steps">
           <li>
             <span class="sheet-num">1</span>
-            <span>اضغط زر المشاركة
+            <span><span data-i18n="i1a">اضغط زر المشاركة</span>
               <svg class="sheet-share" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l4 4-1.4 1.4L13 6.3V15h-2V6.3L9.4 7.9 8 6.5l4-4zM5 10h3v2H7v8h10v-8h-1v-2h3v12H5V10z"/></svg>
-              في شريط المتصفح (أو ⋯ ثم مشاركة)</span>
+              <span data-i18n="i1b">في شريط المتصفح (أو ⋯ ثم مشاركة)</span></span>
           </li>
           <li>
             <span class="sheet-num">2</span>
-            <span>مرّر لأسفل واختر <b>إضافة إلى الشاشة الرئيسية</b></span>
+            <span data-i18n="i2">مرّر لأسفل واختر <b>إضافة إلى الشاشة الرئيسية</b></span>
           </li>
           <li>
             <span class="sheet-num">3</span>
-            <span>اضغط <b>إضافة</b> وسيظهر التطبيق على شاشتك</span>
+            <span data-i18n="i3">اضغط <b>إضافة</b> وسيظهر التطبيق على شاشتك</span>
           </li>
         </ol>
       </div>

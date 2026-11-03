@@ -468,7 +468,7 @@ html.gate-on, html.gate-on body { overflow: hidden; }
 }
 
 .sheet-warn[hidden], #sheetAndroid[hidden], #sheetIos[hidden],
-.sheet-done[hidden], .sheet-primary[hidden], .sheet-steps[hidden], .sheet-later[hidden] { display: none; }
+.sheet-done[hidden], .sheet-primary[hidden], .sheet-steps[hidden] { display: none; }
 
 .sheet-done {
   font-size: 15px;
@@ -481,7 +481,7 @@ html.gate-on, html.gate-on body { overflow: hidden; }
   list-style: none;
   margin: 0 0 1rem;
   padding: 0;
-  text-align: right;
+  text-align: start;
   display: flex;
   flex-direction: column;
   gap: .7rem;
@@ -529,16 +529,6 @@ html.gate-on, html.gate-on body { overflow: hidden; }
   color: #0b1a12;
   cursor: pointer;
   margin-bottom: .5rem;
-}
-
-.sheet-later {
-  font-family: inherit;
-  font-size: 13px;
-  padding: .55rem 1rem;
-  border: 0;
-  background: transparent;
-  color: #8aaa94;
-  cursor: pointer;
 }
 
 @keyframes sheetUp {
