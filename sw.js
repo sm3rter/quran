@@ -1,6 +1,6 @@
 // مهم: غيّر رقم VERSION عند كل نشر لنسخة جديدة، فهذا ما يجعل المتصفحات تكتشف التحديث
 // ويظهر زر "تحديث الآن" للمستخدمين.
-var VERSION = "v2";
+var VERSION = "d594ffba39";
 var SHELL_CACHE = "quran-radio-shell-" + VERSION;
 var RUNTIME_CACHE = "quran-radio-runtime-" + VERSION;
 
