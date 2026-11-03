@@ -406,14 +406,17 @@ body::after {
   inset: 0;
   z-index: 100;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  padding: 1rem;
 }
+
+html.gate-on, html.gate-on body { overflow: hidden; }
 
 .sheet-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.65);
+  background: #0b1a12;
   animation: sheetFade .25s ease both;
 }
 
@@ -426,11 +429,10 @@ body::after {
   text-align: center;
   background: linear-gradient(160deg, #0f2219, #122a1e);
   border: 1px solid rgba(201,168,76,.3);
-  border-bottom: 0;
-  border-radius: 24px 24px 0 0;
-  padding: 1.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -20px 60px rgba(0,0,0,.6);
-  animation: sheetUp .3s ease both;
+  border-radius: 24px;
+  padding: 1.75rem 1.25rem 1.25rem;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  animation: sheetFade .3s ease both;
 }
 
 .sheet-icon {
@@ -465,7 +467,15 @@ body::after {
   margin-bottom: .9rem;
 }
 
-.sheet-warn[hidden], #sheetAndroid[hidden], #sheetIos[hidden] { display: none; }
+.sheet-warn[hidden], #sheetAndroid[hidden], #sheetIos[hidden],
+.sheet-done[hidden], .sheet-primary[hidden], .sheet-steps[hidden], .sheet-later[hidden] { display: none; }
+
+.sheet-done {
+  font-size: 15px;
+  line-height: 1.9;
+  color: #e8d49a;
+  margin-bottom: 1rem;
+}
 
 .sheet-steps {
   list-style: none;

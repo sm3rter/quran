@@ -83,15 +83,31 @@
   </main>
 
   <div class="sheet" id="installSheet" hidden>
-    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-backdrop"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <img class="sheet-icon" src="icon-192.png" alt="" width="64" height="64">
       <h2 class="sheet-title" id="sheetTitle">ثبّت التطبيق على جهازك</h2>
       <p class="sheet-lead">استمع للإذاعة بسرعة من الشاشة الرئيسية مثل أي تطبيق عادي.</p>
 
       <div id="sheetAndroid" hidden>
-        <button class="sheet-primary" id="sheetInstallBtn" type="button">تثبيت الآن</button>
+        <button class="sheet-primary" id="sheetInstallBtn" type="button" hidden>تثبيت الآن</button>
+        <ol class="sheet-steps" id="androidManual">
+          <li>
+            <span class="sheet-num">1</span>
+            <span>اضغط على قائمة المتصفح <b>⋮</b> في أعلى الشاشة</span>
+          </li>
+          <li>
+            <span class="sheet-num">2</span>
+            <span>اختر <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b></span>
+          </li>
+          <li>
+            <span class="sheet-num">3</span>
+            <span>افتح التطبيق من الشاشة الرئيسية</span>
+          </li>
+        </ol>
       </div>
+
+      <p class="sheet-done" id="sheetDone" hidden>تم التثبيت بنجاح ✅<br>افتح التطبيق من أيقونته على الشاشة الرئيسية.</p>
 
       <div id="sheetIos" hidden>
         <p class="sheet-warn" id="iosBrowserWarn" hidden>افتح هذا الرابط في متصفح Safari أولاً، ثم اتبع الخطوات التالية.</p>
@@ -113,7 +129,7 @@
         </ol>
       </div>
 
-      <button class="sheet-later" type="button" data-close>ليس الآن</button>
+      <button class="sheet-later" id="sheetLater" type="button">المتابعة من المتصفح بدون تثبيت</button>
     </div>
   </div>
 

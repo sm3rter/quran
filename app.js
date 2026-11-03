@@ -20,7 +20,6 @@
   var KEY_VOLUME = "quran_volume";
   var KEY_BYTES = "quran_bytes_total";
   var KEY_DATE = "quran_bytes_date";
-  var KEY_INSTALL_DISMISS = "quran_install_dismissed";
 
   var UA = navigator.userAgent || "";
   var IS_IOS =
@@ -481,61 +480,69 @@
     var howBtn = document.getElementById("iosHowBtn");
     var sheet = document.getElementById("installSheet");
     var sheetAndroid = document.getElementById("sheetAndroid");
+    var androidManual = document.getElementById("androidManual");
     var sheetIos = document.getElementById("sheetIos");
     var sheetInstall = document.getElementById("sheetInstallBtn");
+    var sheetDone = document.getElementById("sheetDone");
+    var sheetLater = document.getElementById("sheetLater");
+    var sheetTitle = document.getElementById("sheetTitle");
     var iosWarn = document.getElementById("iosBrowserWarn");
+    var lead = sheet.querySelector(".sheet-lead");
+    var root = document.documentElement;
     var deferred = null;
-    var DISMISS_MS = 3 * 24 * 60 * 60 * 1000;
+    var isMobile = IS_IOS || IS_ANDROID;
 
-    function dismissedRecently() {
-      var t = parseInt(readStore(KEY_INSTALL_DISMISS), 10);
-      return isFinite(t) && Date.now() - t < DISMISS_MS;
-    }
-
-    function openSheet() {
-      if (!sheet.hidden) return;
+    // على الموبايل: شاشة التثبيت تغطي كل شيء، والإذاعة تظهر فقط داخل التطبيق المثبّت
+    function openGate() {
       sheet.hidden = false;
-      var focusTarget = sheet.querySelector(".sheet-later");
-      if (focusTarget) focusTarget.focus();
+      root.classList.add("gate-on");
     }
 
-    function closeSheet(remember) {
-      if (sheet.hidden) return;
+    function closeGate() {
       sheet.hidden = true;
-      if (remember) writeStore(KEY_INSTALL_DISMISS, Date.now());
+      root.classList.remove("gate-on");
     }
 
-    Array.prototype.forEach.call(sheet.querySelectorAll("[data-close]"), function (el) {
-      el.addEventListener("click", function () {
-        closeSheet(true);
-      });
-    });
+    function showDone() {
+      deferred = null;
+      sheetIos.hidden = true;
+      sheetAndroid.hidden = true;
+      sheetLater.hidden = true;
+      lead.hidden = true;
+      sheetTitle.textContent = "تم تثبيت التطبيق";
+      sheetDone.hidden = false;
+      box.hidden = true;
+      if (isMobile) openGate();
+    }
 
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") closeSheet(true);
-    });
+    sheetLater.addEventListener("click", closeGate);
 
-    if (IS_IOS) {
+    if (isMobile) {
       box.hidden = false;
       howBtn.hidden = false;
-      sheetIos.hidden = false;
-      // المتصفحات المدمجة (واتساب، فيسبوك...) لا تدعم الإضافة للشاشة الرئيسية
-      iosWarn.hidden = /Safari/i.test(UA);
-      howBtn.addEventListener("click", openSheet);
-      if (!dismissedRecently()) setTimeout(openSheet, 1200);
+      howBtn.addEventListener("click", openGate);
+      if (IS_IOS) {
+        sheetIos.hidden = false;
+        // المتصفحات المدمجة (واتساب، فيسبوك...) لا تدعم الإضافة للشاشة الرئيسية
+        iosWarn.hidden = /Safari/i.test(UA);
+      } else {
+        sheetAndroid.hidden = false;
+      }
+      openGate();
     }
 
     function doInstall() {
       if (!deferred) return;
       var promptEvent = deferred;
-      closeSheet(false);
       promptEvent.prompt();
       promptEvent.userChoice.then(function (choice) {
         deferred = null;
-        installBtn.hidden = true;
-        box.hidden = true;
-        if (choice && choice.outcome === "dismissed") {
-          writeStore(KEY_INSTALL_DISMISS, Date.now());
+        if (choice && choice.outcome === "accepted") {
+          showDone();
+        } else {
+          sheetInstall.hidden = true;
+          androidManual.hidden = false;
+          installBtn.hidden = true;
         }
       });
     }
@@ -545,18 +552,21 @@
       deferred = event;
       box.hidden = false;
       installBtn.hidden = false;
-      sheetAndroid.hidden = false;
-      if ((IS_ANDROID || IS_IOS) && !dismissedRecently()) setTimeout(openSheet, 800);
+      howBtn.hidden = true;
+      if (IS_ANDROID) {
+        sheetAndroid.hidden = false;
+        sheetInstall.hidden = false;
+        androidManual.hidden = true;
+      }
     });
 
-    installBtn.addEventListener("click", doInstall);
+    installBtn.addEventListener("click", function () {
+      if (isMobile) openGate();
+      else doInstall();
+    });
     sheetInstall.addEventListener("click", doInstall);
 
-    window.addEventListener("appinstalled", function () {
-      deferred = null;
-      closeSheet(false);
-      box.hidden = true;
-    });
+    window.addEventListener("appinstalled", showDone);
   })();
 
   (function floatingDhikr() {
