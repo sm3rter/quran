@@ -484,7 +484,6 @@
     var sheetIos = document.getElementById("sheetIos");
     var sheetInstall = document.getElementById("sheetInstallBtn");
     var sheetDone = document.getElementById("sheetDone");
-    var sheetLater = document.getElementById("sheetLater");
     var sheetTitle = document.getElementById("sheetTitle");
     var iosWarn = document.getElementById("iosBrowserWarn");
     var lead = sheet.querySelector(".sheet-lead");
@@ -498,16 +497,10 @@
       root.classList.add("gate-on");
     }
 
-    function closeGate() {
-      sheet.hidden = true;
-      root.classList.remove("gate-on");
-    }
-
     function showDone() {
       deferred = null;
       sheetIos.hidden = true;
       sheetAndroid.hidden = true;
-      sheetLater.hidden = true;
       lead.hidden = true;
       sheetTitle.textContent = "تم تثبيت التطبيق";
       sheetDone.hidden = false;
@@ -515,12 +508,7 @@
       if (isMobile) openGate();
     }
 
-    sheetLater.addEventListener("click", closeGate);
-
     if (isMobile) {
-      box.hidden = false;
-      howBtn.hidden = false;
-      howBtn.addEventListener("click", openGate);
       if (IS_IOS) {
         sheetIos.hidden = false;
         // المتصفحات المدمجة (واتساب، فيسبوك...) لا تدعم الإضافة للشاشة الرئيسية
@@ -542,7 +530,6 @@
         } else {
           sheetInstall.hidden = true;
           androidManual.hidden = false;
-          installBtn.hidden = true;
         }
       });
     }
@@ -550,9 +537,10 @@
     window.addEventListener("beforeinstallprompt", function (event) {
       event.preventDefault();
       deferred = event;
-      box.hidden = false;
-      installBtn.hidden = false;
-      howBtn.hidden = true;
+      if (!isMobile) {
+        box.hidden = false;
+        installBtn.hidden = false;
+      }
       if (IS_ANDROID) {
         sheetAndroid.hidden = false;
         sheetInstall.hidden = false;
@@ -560,10 +548,7 @@
       }
     });
 
-    installBtn.addEventListener("click", function () {
-      if (isMobile) openGate();
-      else doInstall();
-    });
+    installBtn.addEventListener("click", doInstall);
     sheetInstall.addEventListener("click", doInstall);
 
     window.addEventListener("appinstalled", showDone);
