@@ -1,0 +1,31 @@
+name: Bump SW version
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "sw.js"
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stamp sw.js with a hash of the shell files
+        run: |
+          HASH=$(cat index.html style.css app.js manifest.webmanifest \
+            favicon.png apple-touch-icon.png icon-192.png icon-512.png icon-maskable-512.png \
+            | sha256sum | cut -c1-10)
+          sed -i "s/^var VERSION = \".*\";/var VERSION = \"$HASH\";/" sw.js
+          if git diff --quiet; then
+            echo "No change"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: bump SW version $HASH"
+          git push
