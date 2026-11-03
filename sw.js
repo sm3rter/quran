@@ -1,4 +1,4 @@
-var VERSION = "8a51a59767";
+var VERSION = "38cc317a07";
 var SHELL_CACHE = "quran-radio-shell-" + VERSION;
 var RUNTIME_CACHE = "quran-radio-runtime-" + VERSION;
 
