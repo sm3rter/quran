@@ -1,4 +1,6 @@
-var VERSION = "v1";
+// مهم: غيّر رقم VERSION عند كل نشر لنسخة جديدة، فهذا ما يجعل المتصفحات تكتشف التحديث
+// ويظهر زر "تحديث الآن" للمستخدمين.
+var VERSION = "v2";
 var SHELL_CACHE = "quran-radio-shell-" + VERSION;
 var RUNTIME_CACHE = "quran-radio-runtime-" + VERSION;
 
@@ -23,17 +25,23 @@ function isStream(url) {
   });
 }
 
+// لا نستدعي skipWaiting هنا: النسخة الجديدة تنتظر حتى يضغط المستخدم "تحديث الآن"
 self.addEventListener("install", function (event) {
   event.waitUntil(
-    caches
-      .open(SHELL_CACHE)
-      .then(function (cache) {
-        return cache.addAll(SHELL_FILES);
-      })
-      .then(function () {
-        return self.skipWaiting();
-      })
+    caches.open(SHELL_CACHE).then(function (cache) {
+      return cache.addAll(
+        SHELL_FILES.map(function (file) {
+          return new Request(file, { cache: "reload" });
+        })
+      );
+    })
   );
+});
+
+self.addEventListener("message", function (event) {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", function (event) {
@@ -65,40 +73,24 @@ self.addEventListener("fetch", function (event) {
   if (isStream(url)) return;
   if (request.headers.has("range")) return;
 
+  // الملفات تُخدم من كاش النسخة الحالية فقط، فلا يحدث خلط بين نسخة قديمة وجديدة
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then(function (response) {
-          var copy = response.clone();
-          caches.open(SHELL_CACHE).then(function (cache) {
-            cache.put("index.html", copy);
-          });
-          return response;
-        })
-        .catch(function () {
-          return caches.match("index.html");
-        })
+      caches.open(SHELL_CACHE).then(function (cache) {
+        return cache.match("index.html").then(function (cached) {
+          return cached || fetch(request);
+        });
+      })
     );
     return;
   }
 
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(request).then(function (cached) {
-        var network = fetch(request)
-          .then(function (response) {
-            if (response && response.ok) {
-              var copy = response.clone();
-              caches.open(SHELL_CACHE).then(function (cache) {
-                cache.put(request, copy);
-              });
-            }
-            return response;
-          })
-          .catch(function () {
-            return cached;
-          });
-        return cached || network;
+      caches.open(SHELL_CACHE).then(function (cache) {
+        return cache.match(request, { ignoreSearch: true }).then(function (cached) {
+          return cached || fetch(request);
+        });
       })
     );
     return;

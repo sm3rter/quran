@@ -23,6 +23,11 @@
 <body>
   <div id="dhikr-layer" aria-hidden="true"></div>
 
+  <div class="update-bar" id="updateBar" hidden role="status">
+    <span>يتوفر تحديث جديد للتطبيق</span>
+    <button id="updateBtn" type="button">تحديث الآن</button>
+  </div>
+
   <main class="page">
     <section class="card">
       <div class="ornament">﴿ بِسْمِ ٱللَّـٰهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيـمِ ﴾</div>
@@ -62,7 +67,7 @@
 
       <div class="install" id="installBox" hidden>
         <button class="install-btn" id="installBtn" type="button" hidden>تثبيت التطبيق</button>
-        <p class="install-hint" id="iosHint" hidden>للتثبيت على الآيفون: اضغط زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"</p>
+        <button class="install-btn" id="iosHowBtn" type="button" hidden>كيف أثبّت التطبيق؟</button>
       </div>
     </section>
 
@@ -76,6 +81,41 @@
       <span class="footer-sadaqa">بنيّة صدقة جارية، إن شاء الله</span>
     </footer>
   </main>
+
+  <div class="sheet" id="installSheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <img class="sheet-icon" src="icon-192.png" alt="" width="64" height="64">
+      <h2 class="sheet-title" id="sheetTitle">ثبّت التطبيق على جهازك</h2>
+      <p class="sheet-lead">استمع للإذاعة بسرعة من الشاشة الرئيسية مثل أي تطبيق عادي.</p>
+
+      <div id="sheetAndroid" hidden>
+        <button class="sheet-primary" id="sheetInstallBtn" type="button">تثبيت الآن</button>
+      </div>
+
+      <div id="sheetIos" hidden>
+        <p class="sheet-warn" id="iosBrowserWarn" hidden>افتح هذا الرابط في متصفح Safari أولاً، ثم اتبع الخطوات التالية.</p>
+        <ol class="sheet-steps">
+          <li>
+            <span class="sheet-num">1</span>
+            <span>اضغط زر المشاركة
+              <svg class="sheet-share" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l4 4-1.4 1.4L13 6.3V15h-2V6.3L9.4 7.9 8 6.5l4-4zM5 10h3v2H7v8h10v-8h-1v-2h3v12H5V10z"/></svg>
+              في شريط المتصفح (أو ⋯ ثم مشاركة)</span>
+          </li>
+          <li>
+            <span class="sheet-num">2</span>
+            <span>مرّر لأسفل واختر <b>إضافة إلى الشاشة الرئيسية</b></span>
+          </li>
+          <li>
+            <span class="sheet-num">3</span>
+            <span>اضغط <b>إضافة</b> وسيظهر التطبيق على شاشتك</span>
+          </li>
+        </ol>
+      </div>
+
+      <button class="sheet-later" type="button" data-close>ليس الآن</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

@@ -9,8 +9,10 @@
 
   var BITRATE_KBPS = 128;
   var BYTES_PER_SECOND = (BITRATE_KBPS * 1000) / 8;
-  var MAX_RETRY = 6;
-  var RETRY_DELAY = 3000;
+  var RETRY_DELAY_MIN = 3000;
+  var RETRY_DELAY_MAX = 15000;
+  var OFFLINE_POLL = 4000;
+  var HEARTBEAT_MS = 5000;
   var CONNECT_TIMEOUT = 15000;
   var STALL_TIMEOUT = 12000;
   var MAX_TICK_GAP = 90000;
@@ -18,6 +20,12 @@
   var KEY_VOLUME = "quran_volume";
   var KEY_BYTES = "quran_bytes_total";
   var KEY_DATE = "quran_bytes_date";
+  var KEY_INSTALL_DISMISS = "quran_install_dismissed";
+
+  var UA = navigator.userAgent || "";
+  var IS_IOS =
+    /iphone|ipad|ipod/i.test(UA) || (/Macintosh/i.test(UA) && navigator.maxTouchPoints > 1);
+  var IS_ANDROID = /android/i.test(UA);
 
   var ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
   var ICON_PAUSE = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
@@ -38,13 +46,16 @@
   var usageReset = document.getElementById("dataUsageReset");
 
   var audio = null;
+  var srcActive = false;
   var wantPlay = false;
   var isPlaying = false;
-  var gaveUp = false;
   var streamIndex = 0;
   var retryCount = 0;
   var retryTimer = null;
   var watchdog = null;
+  var heartbeat = null;
+  var troubleAt = 0;
+  var lastProgressAt = 0;
 
   function readStore(key) {
     try {
@@ -108,79 +119,105 @@
     }, ms);
   }
 
-  function releaseAudio() {
+  function startHeartbeat() {
+    if (heartbeat) return;
+    heartbeat = setInterval(function () {
+      if (!wantPlay) return;
+      if (isPlaying && srcActive) {
+        if (Date.now() - lastProgressAt > STALL_TIMEOUT) scheduleRetry();
+      } else if (!retryTimer && !watchdog) {
+        scheduleRetry();
+      }
+    }, HEARTBEAT_MS);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeat) {
+      clearInterval(heartbeat);
+      heartbeat = null;
+    }
+  }
+
+  function releaseSource() {
+    srcActive = false;
     if (!audio) return;
-    var old = audio;
-    audio = null;
     try {
-      old.pause();
-      old.removeAttribute("src");
-      old.load();
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
     } catch (e) {}
   }
 
-  function createAudio() {
-    releaseAudio();
+  // عنصر صوت واحد يُنشأ مرة واحدة (داخل ضغطة المستخدم) ويُعاد استخدامه،
+  // لأن iOS يرفض التشغيل التلقائي في الخلفية على عناصر صوت جديدة.
+  function getAudio() {
+    if (audio) return audio;
     var el = new Audio();
     el.preload = "none";
-    el.volume = volSlider.value / 100;
+    if (!IS_IOS) el.volume = volSlider.value / 100;
 
     el.addEventListener("playing", function () {
-      if (el !== audio) return;
+      if (!srcActive || !wantPlay) return;
       clearTimers();
       retryCount = 0;
+      lastProgressAt = Date.now();
       setUI(true);
       applyMediaMetadata();
     });
 
     el.addEventListener("waiting", function () {
-      if (el !== audio || !wantPlay) return;
+      if (!srcActive || !wantPlay) return;
+      troubleAt = Date.now();
       setStatus("", "جاري التحميل...");
       armWatchdog(STALL_TIMEOUT);
     });
 
     el.addEventListener("stalled", function () {
-      if (el !== audio || !wantPlay) return;
+      if (!srcActive || !wantPlay) return;
+      troubleAt = Date.now();
       armWatchdog(STALL_TIMEOUT);
     });
 
     el.addEventListener("timeupdate", function () {
-      if (el !== audio || !watchdog) return;
-      clearTimeout(watchdog);
-      watchdog = null;
+      if (!srcActive) return;
+      lastProgressAt = Date.now();
+      if (watchdog) {
+        clearTimeout(watchdog);
+        watchdog = null;
+      }
     });
 
     el.addEventListener("error", function () {
-      if (el !== audio || !wantPlay) return;
+      if (!srcActive || !wantPlay) return;
+      troubleAt = Date.now();
       scheduleRetry();
     });
 
     el.addEventListener("ended", function () {
-      if (el !== audio || !wantPlay) return;
+      if (!srcActive || !wantPlay) return;
       scheduleRetry();
     });
 
     el.addEventListener("pause", function () {
-      if (el !== audio || !wantPlay) return;
-      stopPlayback();
+      if (!srcActive || !wantPlay || !el.paused) return;
+      // توقف بسبب مشاكل الاتصال: نعيد المحاولة، وغير ذلك: إيقاف من المستخدم/النظام
+      if (Date.now() - troubleAt < 15000) {
+        scheduleRetry();
+      } else {
+        stopPlayback();
+      }
     });
 
     audio = el;
+    return el;
   }
 
+  // إعادة المحاولة بلا حد أقصى، والفاصل بين المحاولات يزيد تدريجياً حتى 15 ثانية
   function scheduleRetry() {
     clearTimers();
     if (!wantPlay) return;
 
-    if (retryCount >= MAX_RETRY) {
-      wantPlay = false;
-      gaveUp = true;
-      releaseAudio();
-      setUI(false);
-      setStatus("err", "تعذّر الاتصال، تحقق من الإنترنت");
-      return;
-    }
-
+    releaseSource();
     streamIndex = (streamIndex + 1) % STREAMS.length;
     retryCount += 1;
     isPlaying = false;
@@ -188,26 +225,42 @@
     playBtn.className = "play-btn";
     setIcon(ICON_SPIN);
     usage.stop();
-    setStatus("", "إعادة الاتصال... (" + retryCount + "/" + MAX_RETRY + ")");
-    retryTimer = setTimeout(attemptPlay, RETRY_DELAY);
+
+    if (navigator.onLine === false) {
+      setStatus("err", "لا يوجد اتصال، سيُعاد الاتصال تلقائياً");
+    } else {
+      setStatus("", "إعادة الاتصال... (محاولة " + retryCount + ")");
+    }
+
+    var delay = Math.min(RETRY_DELAY_MIN + (retryCount - 1) * 1500, RETRY_DELAY_MAX);
+    retryTimer = setTimeout(attemptPlay, delay);
   }
 
   function attemptPlay() {
     clearTimers();
     if (!wantPlay) return;
 
-    createAudio();
-    var el = audio;
+    if (navigator.onLine === false) {
+      releaseSource();
+      setIcon(ICON_SPIN);
+      setStatus("err", "لا يوجد اتصال، سيُعاد الاتصال تلقائياً");
+      retryTimer = setTimeout(attemptPlay, OFFLINE_POLL);
+      return;
+    }
+
+    var el = getAudio();
+    releaseSource();
     setIcon(ICON_SPIN);
     setStatus("", "جاري الاتصال بالبث...");
     armWatchdog(CONNECT_TIMEOUT);
 
+    srcActive = true;
     el.src = STREAMS[streamIndex] + "?t=" + Date.now();
 
     var request = el.play();
     if (request && typeof request.catch === "function") {
       request.catch(function (err) {
-        if (el !== audio || !wantPlay) return;
+        if (!srcActive || !wantPlay) return;
         if (err && err.name === "AbortError") return;
         if (err && err.name === "NotAllowedError") {
           stopPlayback();
@@ -220,19 +273,19 @@
 
   function startPlayback() {
     wantPlay = true;
-    gaveUp = false;
     streamIndex = 0;
     retryCount = 0;
+    startHeartbeat();
     attemptPlay();
   }
 
   function stopPlayback() {
     wantPlay = false;
-    gaveUp = false;
     retryCount = 0;
     streamIndex = 0;
     clearTimers();
-    releaseAudio();
+    stopHeartbeat();
+    releaseSource();
     setUI(false);
   }
 
@@ -244,11 +297,27 @@
     }
   });
 
+  // iOS و بعض الأجهزة تتجاهل audio.volume، فنخفي شريط الصوت هناك
+  function volumeSupported() {
+    if (IS_IOS) return false;
+    try {
+      var probe = new Audio();
+      probe.volume = 0.5;
+      return probe.volume === 0.5;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  var volRow = document.querySelector(".vol-row");
+  var canSetVolume = volumeSupported();
+  if (!canSetVolume && volRow) volRow.hidden = true;
+
   function applyVolume(value) {
     var v = Math.min(100, Math.max(0, Number(value) || 0));
     volSlider.value = v;
     volVal.textContent = v + "%";
-    if (audio) audio.volume = v / 100;
+    if (audio && canSetVolume) audio.volume = v / 100;
     return v;
   }
 
@@ -348,7 +417,9 @@
   });
 
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden && !isPlaying) usage.refresh();
+    if (document.hidden) return;
+    if (!isPlaying) usage.refresh();
+    if (wantPlay && !isPlaying) attemptPlay();
   });
 
   function applyMediaMetadata() {
@@ -388,53 +459,102 @@
   bindMediaActions();
 
   window.addEventListener("online", function () {
-    if (gaveUp) {
-      startPlayback();
+    if (!wantPlay) return;
+    if (!isPlaying || Date.now() - lastProgressAt > 4000) {
+      retryCount = 0;
+      attemptPlay();
     }
   });
 
   window.addEventListener("offline", function () {
-    if (wantPlay) setStatus("err", "لا يوجد اتصال بالإنترنت");
+    if (wantPlay) setStatus("err", "لا يوجد اتصال، سيُعاد الاتصال تلقائياً");
   });
 
   (function setupInstall() {
-    var box = document.getElementById("installBox");
-    var button = document.getElementById("installBtn");
-    var iosHint = document.getElementById("iosHint");
-    var deferred = null;
-
     var standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone === true;
     if (standalone) return;
 
-    var ua = navigator.userAgent || "";
-    var isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+    var box = document.getElementById("installBox");
+    var installBtn = document.getElementById("installBtn");
+    var howBtn = document.getElementById("iosHowBtn");
+    var sheet = document.getElementById("installSheet");
+    var sheetAndroid = document.getElementById("sheetAndroid");
+    var sheetIos = document.getElementById("sheetIos");
+    var sheetInstall = document.getElementById("sheetInstallBtn");
+    var iosWarn = document.getElementById("iosBrowserWarn");
+    var deferred = null;
+    var DISMISS_MS = 3 * 24 * 60 * 60 * 1000;
 
-    if (isIOS) {
+    function dismissedRecently() {
+      var t = parseInt(readStore(KEY_INSTALL_DISMISS), 10);
+      return isFinite(t) && Date.now() - t < DISMISS_MS;
+    }
+
+    function openSheet() {
+      if (!sheet.hidden) return;
+      sheet.hidden = false;
+      var focusTarget = sheet.querySelector(".sheet-later");
+      if (focusTarget) focusTarget.focus();
+    }
+
+    function closeSheet(remember) {
+      if (sheet.hidden) return;
+      sheet.hidden = true;
+      if (remember) writeStore(KEY_INSTALL_DISMISS, Date.now());
+    }
+
+    Array.prototype.forEach.call(sheet.querySelectorAll("[data-close]"), function (el) {
+      el.addEventListener("click", function () {
+        closeSheet(true);
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeSheet(true);
+    });
+
+    if (IS_IOS) {
       box.hidden = false;
-      iosHint.hidden = false;
+      howBtn.hidden = false;
+      sheetIos.hidden = false;
+      // المتصفحات المدمجة (واتساب، فيسبوك...) لا تدعم الإضافة للشاشة الرئيسية
+      iosWarn.hidden = /Safari/i.test(UA);
+      howBtn.addEventListener("click", openSheet);
+      if (!dismissedRecently()) setTimeout(openSheet, 1200);
+    }
+
+    function doInstall() {
+      if (!deferred) return;
+      var promptEvent = deferred;
+      closeSheet(false);
+      promptEvent.prompt();
+      promptEvent.userChoice.then(function (choice) {
+        deferred = null;
+        installBtn.hidden = true;
+        box.hidden = true;
+        if (choice && choice.outcome === "dismissed") {
+          writeStore(KEY_INSTALL_DISMISS, Date.now());
+        }
+      });
     }
 
     window.addEventListener("beforeinstallprompt", function (event) {
       event.preventDefault();
       deferred = event;
       box.hidden = false;
-      button.hidden = false;
+      installBtn.hidden = false;
+      sheetAndroid.hidden = false;
+      if ((IS_ANDROID || IS_IOS) && !dismissedRecently()) setTimeout(openSheet, 800);
     });
 
-    button.addEventListener("click", function () {
-      if (!deferred) return;
-      deferred.prompt();
-      deferred.userChoice.then(function () {
-        deferred = null;
-        button.hidden = true;
-        box.hidden = true;
-      });
-    });
+    installBtn.addEventListener("click", doInstall);
+    sheetInstall.addEventListener("click", doInstall);
 
     window.addEventListener("appinstalled", function () {
       deferred = null;
+      closeSheet(false);
       box.hidden = true;
     });
   })();
@@ -535,9 +655,69 @@
     setInterval(spawn, 4000);
   })();
 
-  if ("serviceWorker" in navigator) {
+  (function setupUpdate() {
+    if (!("serviceWorker" in navigator)) return;
+
+    var bar = document.getElementById("updateBar");
+    var btn = document.getElementById("updateBtn");
+    var reg = null;
+    var refreshing = false;
+
+    function showBar() {
+      if (bar) bar.hidden = false;
+    }
+
+    function track(worker) {
+      worker.addEventListener("statechange", function () {
+        if (worker.state === "installed" && navigator.serviceWorker.controller) showBar();
+      });
+    }
+
+    function checkForUpdate() {
+      if (reg) reg.update().catch(function () {});
+    }
+
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
+      navigator.serviceWorker
+        .register("sw.js", { updateViaCache: "none" })
+        .then(function (r) {
+          reg = r;
+          if (r.waiting && navigator.serviceWorker.controller) showBar();
+          if (r.installing) track(r.installing);
+          r.addEventListener("updatefound", function () {
+            if (r.installing) track(r.installing);
+          });
+          checkForUpdate();
+          setInterval(checkForUpdate, 30 * 60 * 1000);
+        })
+        .catch(function () {});
     });
-  }
+
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) checkForUpdate();
+    });
+
+    window.addEventListener("online", checkForUpdate);
+
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!refreshing) return;
+      window.location.reload();
+    });
+
+    if (btn) {
+      btn.addEventListener("click", function () {
+        refreshing = true;
+        btn.disabled = true;
+        btn.textContent = "جاري التحديث...";
+        if (reg && reg.waiting) {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          setTimeout(function () {
+            window.location.reload();
+          }, 4000);
+        } else {
+          window.location.reload();
+        }
+      });
+    }
+  })();
 })();
